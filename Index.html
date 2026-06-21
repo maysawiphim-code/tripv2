@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "Segoe UI", "Sarabun", sans-serif;
+      background: #f0f2f6;
+      margin: 0;
+      padding: 16px;
+      color: #1a1a1a;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 22px; color: #ff4b4b; margin: 4px 0 16px; }
+    h2 { font-size: 18px; margin: 24px 0 10px; border-bottom: 2px solid #ff4b4b; padding-bottom: 6px; }
+    h3 { font-size: 15px; margin: 16px 0 8px; color: #444; }
+    .card {
+      background: #fff; border-radius: 10px; padding: 18px;
+      margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    input[type=text], input[type=number], input[type=date], select {
+      width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;
+      font-size: 14px; margin-top: 4px;
+    }
+    textarea {
+      width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;
+      font-size: 14px; margin-top: 4px; resize: vertical; min-height: 50px;
+    }
+    label { font-weight: 600; font-size: 13px; color: #333; display: block; margin-top: 10px; }
+    button {
+      background: #ff4b4b; color: #fff; border: none; padding: 10px 16px;
+      border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 600;
+    }
+    button:hover { background: #e63e3e; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    button.secondary { background: #f1f0f0; color: #444; }
+    button.secondary:hover { background: #e3e3e3; }
+    button.success { background: #28a745; }
+    button.success:hover { background: #218838; }
+    button.small { padding: 6px 12px; font-size: 13px; }
+    button.block { width: 100%; margin-top: 10px; }
+    .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 700px) { .grid3 { grid-template-columns: 1fr; } }
+    .img-slot {
+      border: 2px dashed #ddd; border-radius: 8px; padding: 8px; text-align: center;
+      background: #fafafa;
+    }
+    .img-slot img { max-width: 100%; border-radius: 6px; margin-top: 6px; }
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 12px;
+      font-size: 12px; font-weight: 600;
+    }
+    .badge.draft { background: #fff3cd; color: #856404; }
+    .badge.confirmed { background: #d4edda; color: #155724; }
+    .site-item {
+      background: #fff; border-radius: 10px; padding: 14px 18px; margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 8px;
+    }
+    .site-meta { font-size: 12px; color: #777; margin-top: 4px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .status-msg {
+      padding: 10px 14px; border-radius: 6px; margin: 10px 0; font-size: 14px; display: none;
+    }
+    .status-msg.show { display: block; }
+    .status-msg.ok { background: #d4edda; color: #155724; }
+    .status-msg.err { background: #f8d7da; color: #721c24; }
+    .status-msg.info { background: #cce5ff; color: #004085; }
+    .fuel-row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .fuel-left { flex: 1.4; min-width: 220px; }
+    .fuel-right { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 8px; }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px; border: 2px solid #fff;
+      border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite;
+      margin-right: 6px; vertical-align: -2px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .locked-note { font-size: 12px; color: #2a7a2a; margin-top: 4px; }
+    .empty-hint { text-align: center; color: #888; padding: 30px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ══════════════ หน้า 1: รายการไซต์งาน ══════════════ -->
+  <div id="page-list">
+    <h1>🚗 Trip Logger Pro</h1>
+
+    <div class="card">
+      <h3 style="margin-top:0">➕ สร้างไซต์งานใหม่</h3>
+      <div class="row">
+        <input type="text" id="newSiteName" placeholder="ระบุชื่อไซต์งาน..." style="flex:1">
+        <button onclick="onCreateSite()" id="btnCreateSite">สร้าง</button>
+      </div>
+    </div>
+
+    <h2>📋 ไซต์งานที่บันทึกไว้</h2>
+    <div id="siteListContainer">
+      <div class="empty-hint">กำลังโหลด...</div>
+    </div>
+  </div>
+
+  <!-- ══════════════ หน้า 2: กรอกข้อมูลไซต์ ══════════════ -->
+  <div id="page-detail" style="display:none">
+    <div class="topbar">
+      <button class="secondary small" onclick="goToList()">⬅️ กลับหน้ารายการ</button>
+      <span id="siteStatusBadge"></span>
+    </div>
+    <h1 id="siteTitle">📁 ไซต์งาน</h1>
+    <div id="confirmedNotice" class="status-msg info"></div>
+
+    <!-- โรงแรม -->
+    <h2>🏨 รูปภาพโรงแรม</h2>
+    <div id="hotelsContainer"></div>
+
+    <!-- รถ -->
+    <h2>🚙 ข้อมูลรถและการเดินทาง</h2>
+    <div class="card">
+      <div class="grid3">
+        <div>
+          <label>เลขไมล์เริ่มต้น</label>
+          <input type="number" id="startMile" min="0">
+        </div>
+        <div>
+          <label>เลขไมล์หลังจบ</label>
+          <input type="number" id="endMile" min="0">
+        </div>
+        <div>
+          <label>รูปรถ (ทั่วไป)</label>
+          <div class="img-slot" id="carImgSlot">
+            <input type="file" id="carImgInput" accept="image/*">
+            <div id="carImgPreview"></div>
+          </div>
+        </div>
+      </div>
+      <button class="block" id="btnSaveCar" onclick="onSaveCar()">💾 บันทึกข้อมูลรถ</button>
+    </div>
+
+    <!-- น้ำมัน -->
+    <h2>⛽ บันทึกการเติมน้ำมัน (สูงสุด 20 ครั้ง)</h2>
+    <div id="fuelContainer"></div>
+
+    <!-- ยืนยัน -->
+    <h2>✅ ยืนยันและส่งรายงาน</h2>
+    <div class="card">
+      <p id="confirmHint" style="color:#666;font-size:13px">
+        ต้องกรอกข้อมูลรถ (เลขไมล์ หรือรูปรถ) อย่างน้อย 1 อย่างก่อนจึงจะยืนยันไซต์งานได้<br>
+        กดยืนยันได้หลายครั้ง — ทุกครั้งจะสร้างไฟล์ Word ใหม่และส่งอีเมลแจ้งให้อัตโนมัติ
+      </p>
+      <button class="success block" id="btnConfirm" onclick="onConfirmSite()">🔒 ยืนยัน (สร้างรายงาน + ส่งอีเมล)</button>
+      <p id="reportLinkBox" style="margin-top:10px;font-size:13px;display:none"></p>
+    </div>
+
+    <div id="statusMsg" class="status-msg"></div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────
+const HOTEL_COUNT = 3;
+const HOTEL_ITEM_COUNT = 3;
+const FUEL_COUNT = 20;
+
+let currentSiteId = null;
+let currentDetail = null;
+let pendingFiles = {}; // key -> {dataUrl, fileName}  เก็บไฟล์ที่เลือกแต่ยังไม่ได้อัปโหลด
+
+// ─────────────────────────────────────────────────────────────────────────
+// UTIL
+// ─────────────────────────────────────────────────────────────────────────
+function showStatus(msg, type) {
+  const el = document.getElementById('statusMsg');
+  el.className = 'status-msg show ' + (type || 'info');
+  el.innerText = msg;
+  if (type === 'ok') setTimeout(() => { el.classList.remove('show'); }, 4000);
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function uploadIfPending(key) {
+  return new Promise((resolve, reject) => {
+    const pending = pendingFiles[key];
+    if (!pending) { resolve(null); return; } // ไม่มีไฟล์ใหม่ ใช้ url เดิม
+    google.script.run
+      .withSuccessHandler(url => resolve(url))
+      .withFailureHandler(err => reject(err))
+      .uploadFile(pending.dataUrl, pending.fileName);
+  });
+}
+
+function fmtDate(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  return d.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// หน้า 1: รายการไซต์
+// ─────────────────────────────────────────────────────────────────────────
+function loadSiteList() {
+  const c = document.getElementById('siteListContainer');
+  c.innerHTML = '<div class="empty-hint">กำลังโหลด...</div>';
+  google.script.run
+    .withSuccessHandler(renderSiteList)
+    .withFailureHandler(err => { c.innerHTML = '<div class="empty-hint">โหลดไม่สำเร็จ: ' + err.message + '</div>'; })
+    .listSites();
+}
+
+function renderSiteList(sites) {
+  const c = document.getElementById('siteListContainer');
+  if (!sites || sites.length === 0) {
+    c.innerHTML = '<div class="empty-hint">ยังไม่มีไซต์งาน — สร้างไซต์ใหม่ด้านบนได้เลย</div>';
+    return;
+  }
+  c.innerHTML = sites.map(s => `
+    <div class="site-item">
+      <div>
+        <div><strong>📁 ${escapeHtml(s.siteName)}</strong>
+          <span class="badge ${s.status === 'confirmed' ? 'confirmed' : 'draft'}">
+            ${s.status === 'confirmed' ? '✅ ยืนยันแล้ว' : '📝 ฉบับร่าง'}
+          </span>
+        </div>
+        <div class="site-meta">
+          🕐 สร้าง: ${fmtDate(s.createdAt)}
+          ${s.status === 'confirmed' ? ' | 🔒 ยืนยัน: ' + fmtDate(s.confirmedAt) : ''}
+          | 🏨 โรงแรม ${s.hotelCount} รูป | ⛽ น้ำมัน ${s.fuelCount} ครั้ง
+        </div>
+      </div>
+      <div class="row">
+        <button class="small" onclick="openSite('${s.siteId}')">
+          ${s.status === 'confirmed' ? '👁️ ดู/ส่งออก' : '✏️ แก้ไข'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.innerText = s == null ? '' : s;
+  return div.innerHTML;
+}
+
+function onCreateSite() {
+  const name = document.getElementById('newSiteName').value.trim();
+  if (!name) { showStatus('กรุณาระบุชื่อไซต์งาน', 'err'); return; }
+  const btn = document.getElementById('btnCreateSite');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>กำลังสร้าง...';
+  google.script.run
+    .withSuccessHandler(res => {
+      btn.disabled = false; btn.innerText = 'สร้าง';
+      document.getElementById('newSiteName').value = '';
+      openSite(res.siteId);
+    })
+    .withFailureHandler(err => {
+      btn.disabled = false; btn.innerText = 'สร้าง';
+      alert('สร้างไซต์ไม่สำเร็จ: ' + err.message);
+    })
+    .createSite(name);
+}
+
+function goToList() {
+  document.getElementById('page-detail').style.display = 'none';
+  document.getElementById('page-list').style.display = 'block';
+  currentSiteId = null; currentDetail = null; pendingFiles = {};
+  loadSiteList();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// หน้า 2: รายละเอียดไซต์
+// ─────────────────────────────────────────────────────────────────────────
+function openSite(siteId) {
+  currentSiteId = siteId;
+  pendingFiles = {};
+  document.getElementById('page-list').style.display = 'none';
+  document.getElementById('page-detail').style.display = 'block';
+  document.getElementById('siteTitle').innerText = '📁 กำลังโหลด...';
+  document.getElementById('hotelsContainer').innerHTML = '<div class="empty-hint">กำลังโหลด...</div>';
+  document.getElementById('fuelContainer').innerHTML = '';
+
+  google.script.run
+    .withSuccessHandler(detail => { currentDetail = detail; renderSiteDetail(detail); })
+    .withFailureHandler(err => { alert('โหลดข้อมูลไม่สำเร็จ: ' + err.message); goToList(); })
+    .getSiteDetail(siteId);
+}
+
+function renderSiteDetail(detail) {
+  document.getElementById('siteTitle').innerText = '📸 ' + detail.siteName;
+  const isConfirmed = detail.status === 'confirmed';
+
+  document.getElementById('siteStatusBadge').innerHTML =
+    `<span class="badge ${isConfirmed ? 'confirmed' : 'draft'}">${isConfirmed ? '✅ ยืนยันแล้ว' : '📝 ฉบับร่าง'}</span>`;
+
+  const notice = document.getElementById('confirmedNotice');
+  if (isConfirmed) {
+    notice.className = 'status-msg info show';
+    notice.innerText = '✅ ไซต์งานนี้เคยถูกยืนยันแล้ว — ยังแก้ไข/เพิ่มข้อมูลต่อได้ '
+      + 'กดยืนยันซ้ำได้ทุกครั้งที่ต้องการอัปเดตรายงานและส่งอีเมลใหม่';
+  } else {
+    notice.className = 'status-msg';
+  }
+
+  // หมายเหตุ: ส่ง false เสมอ (ไม่ใช่ isConfirmed) เพราะตอนนี้อนุญาตให้แก้ไข
+  // ข้อมูลได้แม้ไซต์จะถูกยืนยันไปแล้ว — ฟอร์มจึงไม่ถูกล็อกอีกต่อไป
+  renderHotels(detail, false);
+  renderCar(detail, false);
+  renderFuel(detail, false);
+
+  document.getElementById('btnConfirm').style.display = 'block';
+  document.getElementById('confirmHint').style.display = 'block';
+
+  const reportBox = document.getElementById('reportLinkBox');
+  if (detail.reportUrl) {
+    reportBox.style.display = 'block';
+    reportBox.innerHTML = '📄 รายงานล่าสุด: <a href="' + detail.reportUrl + '" target="_blank">เปิดไฟล์ Word</a>';
+  } else {
+    reportBox.style.display = 'none';
+  }
+}
+
+// ── โรงแรม ──
+function renderHotels(detail, isConfirmed) {
+  let html = '';
+  for (let h = 1; h <= HOTEL_COUNT; h++) {
+    html += `<div class="card"><h3 style="margin-top:0">โรงแรมที่ ${h}</h3><div class="grid3">`;
+    for (let i = 1; i <= HOTEL_ITEM_COUNT; i++) {
+      const item = detail.hotels[h][i];
+      const key = `hotel_${h}_${i}`;
+      html += `
+        <div>
+          <div class="img-slot" id="slot_${key}">
+            ${item.imgUrl ? `<img src="${item.imgUrl}">` : ''}
+            ${isConfirmed ? '' : `<input type="file" accept="image/*" onchange="onPickFile('${key}', this)">`}
+          </div>
+          <label>คำอธิบาย</label>
+          <textarea id="desc_${key}" ${isConfirmed ? 'disabled' : ''} placeholder="คำอธิบายรูปนี้...">${escapeHtml(item.desc)}</textarea>
+        </div>`;
+    }
+    html += `</div>`;
+    if (!isConfirmed) {
+      html += `<button class="block" onclick="onSaveHotel(${h})" id="btnSaveHotel${h}">💾 บันทึกโรงแรมที่ ${h}</button>`;
+    }
+    html += `</div>`;
+  }
+  document.getElementById('hotelsContainer').innerHTML = html;
+}
+
+function onPickFile(key, inputEl) {
+  const file = inputEl.files[0];
+  if (!file) return;
+  fileToDataUrl(file).then(dataUrl => {
+    pendingFiles[key] = { dataUrl, fileName: file.name };
+    const slot = document.getElementById('slot_' + key) || document.getElementById('carImgSlot');
+    const previewImg = `<img src="${dataUrl}">`;
+    // แสดง preview ทันทีโดยไม่รอ upload จริง (upload จะเกิดตอนกดบันทึก)
+    if (key === 'car') {
+      document.getElementById('carImgPreview').innerHTML = previewImg;
+    } else {
+      const existing = slot.querySelector('img');
+      if (existing) existing.remove();
+      slot.insertAdjacentHTML('afterbegin', previewImg);
+    }
+  });
+}
+
+function onSaveHotel(hotelNo) {
+  const btn = document.getElementById('btnSaveHotel' + hotelNo);
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
+
+  const tasks = [];
+  for (let i = 1; i <= HOTEL_ITEM_COUNT; i++) {
+    const key = `hotel_${hotelNo}_${i}`;
+    const desc = document.getElementById('desc_' + key).value;
+    const existingUrl = currentDetail.hotels[hotelNo][i].imgUrl;
+    tasks.push(
+      uploadIfPending(key).then(newUrl => ({
+        itemNo: i,
+        desc,
+        imgUrl: newUrl || existingUrl || '',
+      }))
+    );
+  }
+
+  Promise.all(tasks)
+    .then(results => {
+      const savePromises = results.map(r => new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .saveHotelItem(currentSiteId, hotelNo, r.itemNo, r.imgUrl, r.desc);
+      }));
+      return Promise.all(savePromises);
+    })
+    .then(() => {
+      showStatus('✅ บันทึกโรงแรมที่ ' + hotelNo + ' เรียบร้อย', 'ok');
+      btn.disabled = false; btn.innerText = '💾 บันทึกโรงแรมที่ ' + hotelNo;
+      openSite(currentSiteId); // โหลดใหม่เพื่อ sync url ล่าสุด
+    })
+    .catch(err => {
+      showStatus('❌ บันทึกไม่สำเร็จ: ' + (err.message || err), 'err');
+      btn.disabled = false; btn.innerText = '💾 บันทึกโรงแรมที่ ' + hotelNo;
+    });
+}
+
+// ── รถ ──
+function renderCar(detail, isConfirmed) {
+  document.getElementById('startMile').value = detail.startMile || 0;
+  document.getElementById('endMile').value = detail.endMile || 0;
+  document.getElementById('startMile').disabled = isConfirmed;
+  document.getElementById('endMile').disabled = isConfirmed;
+  document.getElementById('btnSaveCar').style.display = isConfirmed ? 'none' : 'block';
+
+  const preview = document.getElementById('carImgPreview');
+  preview.innerHTML = detail.carImgUrl ? `<img src="${detail.carImgUrl}">` : '';
+
+  const fileInput = document.getElementById('carImgInput');
+  if (isConfirmed) {
+    fileInput.style.display = 'none';
+  } else {
+    fileInput.style.display = 'block';
+    fileInput.onchange = function () { onPickFile('car', this); };
+  }
+}
+
+function onSaveCar() {
+  const btn = document.getElementById('btnSaveCar');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
+
+  const startMile = Number(document.getElementById('startMile').value) || 0;
+  const endMile = Number(document.getElementById('endMile').value) || 0;
+
+  uploadIfPending('car')
+    .then(newUrl => {
+      const carImgUrl = newUrl || (currentDetail.carImgUrl || '');
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .saveCarInfo(currentSiteId, startMile, endMile, carImgUrl);
+      });
+    })
+    .then(() => {
+      showStatus('✅ บันทึกข้อมูลรถเรียบร้อย', 'ok');
+      btn.disabled = false; btn.innerText = '💾 บันทึกข้อมูลรถ';
+      openSite(currentSiteId);
+    })
+    .catch(err => {
+      showStatus('❌ บันทึกไม่สำเร็จ: ' + (err.message || err), 'err');
+      btn.disabled = false; btn.innerText = '💾 บันทึกข้อมูลรถ';
+    });
+}
+
+// ── น้ำมัน ──
+function renderFuel(detail, isConfirmed) {
+  let html = '';
+  for (let n = 1; n <= FUEL_COUNT; n++) {
+    const f = detail.fuel[n];
+    const billKey = `fuel_${n}_bill`;
+    const preKey = `fuel_${n}_pre`;
+    const postKey = `fuel_${n}_post`;
+    const hasData = f.billUrl || f.preUrl || f.postUrl || f.province;
+    html += `
+      <details class="card" ${hasData ? 'open' : ''}>
+        <summary style="cursor:pointer;font-weight:600">การเติมครั้งที่ ${n} ${hasData ? '✅' : ''}</summary>
+        <div class="fuel-row" style="margin-top:10px">
+          <div class="fuel-left">
+            <label>📸 ใบเสร็จ (รูปใหญ่)</label>
+            <div class="img-slot" id="slot_${billKey}" style="min-height:180px">
+              ${f.billUrl ? `<img src="${f.billUrl}">` : ''}
+              ${isConfirmed ? '' : `<input type="file" accept="image/*" onchange="onPickFile('${billKey}', this)">`}
+            </div>
+          </div>
+          <div class="fuel-right">
+            <div>
+              <label>🔼 ไมล์ก่อนเติม</label>
+              <div class="img-slot" id="slot_${preKey}">
+                ${f.preUrl ? `<img src="${f.preUrl}">` : ''}
+                ${isConfirmed ? '' : `<input type="file" accept="image/*" onchange="onPickFile('${preKey}', this)">`}
+              </div>
+            </div>
+            <div>
+              <label>🔽 ไมล์หลังเติม</label>
+              <div class="img-slot" id="slot_${postKey}">
+                ${f.postUrl ? `<img src="${f.postUrl}">` : ''}
+                ${isConfirmed ? '' : `<input type="file" accept="image/*" onchange="onPickFile('${postKey}', this)">`}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:10px">
+          <div>
+            <label>วันที่เติม</label>
+            <input type="date" id="date_${n}" value="${f.date || ''}" ${isConfirmed ? 'disabled' : ''}>
+          </div>
+          <div>
+            <label>จังหวัด</label>
+            <input type="text" id="prov_${n}" value="${escapeHtml(f.province)}" ${isConfirmed ? 'disabled' : ''} placeholder="ระบุจังหวัด...">
+          </div>
+        </div>
+        ${isConfirmed ? '' : `<button class="block" onclick="onSaveFuel(${n})" id="btnSaveFuel${n}">💾 บันทึกรายการที่ ${n}</button>`}
+      </details>`;
+  }
+  document.getElementById('fuelContainer').innerHTML = html;
+}
+
+function onSaveFuel(fuelNo) {
+  const btn = document.getElementById('btnSaveFuel' + fuelNo);
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>กำลังบันทึก...';
+
+  const billKey = `fuel_${fuelNo}_bill`;
+  const preKey = `fuel_${fuelNo}_pre`;
+  const postKey = `fuel_${fuelNo}_post`;
+  const date = document.getElementById('date_' + fuelNo).value;
+  const province = document.getElementById('prov_' + fuelNo).value;
+  const existing = currentDetail.fuel[fuelNo];
+
+  Promise.all([uploadIfPending(billKey), uploadIfPending(preKey), uploadIfPending(postKey)])
+    .then(([billUrl, preUrl, postUrl]) => {
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .saveFuelItem(
+            currentSiteId, fuelNo,
+            billUrl || existing.billUrl || '',
+            preUrl || existing.preUrl || '',
+            postUrl || existing.postUrl || '',
+            date, province
+          );
+      });
+    })
+    .then(() => {
+      showStatus('✅ บันทึกการเติมน้ำมันครั้งที่ ' + fuelNo + ' เรียบร้อย', 'ok');
+      btn.disabled = false; btn.innerText = '💾 บันทึกรายการที่ ' + fuelNo;
+      openSite(currentSiteId);
+    })
+    .catch(err => {
+      showStatus('❌ บันทึกไม่สำเร็จ: ' + (err.message || err), 'err');
+      btn.disabled = false; btn.innerText = '💾 บันทึกรายการที่ ' + fuelNo;
+    });
+}
+
+// ── ยืนยัน / Export ──
+function onConfirmSite() {
+  if (!confirm('ยืนยันไซต์งานนี้?\\nระบบจะสร้างไฟล์รายงาน Word และส่งอีเมลแจ้งให้ทันที '
+    + '(กดยืนยันซ้ำได้ทุกครั้งที่ต้องการอัปเดตรายงาน)')) return;
+  const btn = document.getElementById('btnConfirm');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>กำลังสร้างรายงานและส่งอีเมล...';
+
+  google.script.run
+    .withSuccessHandler(res => {
+      if (res.emailSent) {
+        showStatus('✅ ยืนยันสำเร็จ — สร้างรายงานและส่งอีเมลเรียบร้อยแล้ว', 'ok');
+      } else {
+        showStatus('⚠️ ยืนยันสำเร็จและสร้างรายงานแล้ว แต่ส่งอีเมลไม่สำเร็จ: ' + res.emailError, 'err');
+      }
+      btn.disabled = false; btn.innerText = '🔒 ยืนยัน (สร้างรายงาน + ส่งอีเมล)';
+      openSite(currentSiteId);
+    })
+    .withFailureHandler(err => {
+      showStatus('❌ ' + err.message, 'err');
+      btn.disabled = false; btn.innerText = '🔒 ยืนยัน (สร้างรายงาน + ส่งอีเมล)';
+    })
+    .confirmSite(currentSiteId);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// ผูกฟังก์ชันที่ onclick/onchange เรียกใช้เข้ากับ window object โดยตรง
+// เพื่อรับประกันว่าอยู่ใน global scope จริง ไม่ว่า Apps Script HtmlService
+// จะ wrap/sandbox สคริปต์ของหน้านี้แบบใดก็ตาม (แก้ปัญหา "xxx is not defined"
+// ที่เกิดกับ inline onclick="funcName()" ใน iframe sandbox ของ Apps Script)
+// ─────────────────────────────────────────────────────────────────────────
+window.onCreateSite = onCreateSite;
+window.goToList = goToList;
+window.openSite = openSite;
+window.onPickFile = onPickFile;
+window.onSaveHotel = onSaveHotel;
+window.onSaveCar = onSaveCar;
+window.onSaveFuel = onSaveFuel;
+window.onConfirmSite = onConfirmSite;
+
+// ─────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────
+loadSiteList();
+</script>
+</body>
+</html>
