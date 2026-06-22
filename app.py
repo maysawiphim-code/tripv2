@@ -42,8 +42,8 @@ from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
 # 0. ตั้งค่า
 # ─────────────────────────────────────────────────────────────────────────
 KEY_FILE = os.environ.get("GOOGLE_KEY_FILE", "key.json")
-SPREADSHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "")
-DRIVE_FOLDER_ID = os.environ.get("GOOGLE_DRIVE_FOLDER_ID", "")
+SPREADSHEET_ID = os.environ.get("GOOGLE_SHEET_ID", "1AQ3X8WAmKVcELWXmDuEIiuRCk89Y4AOMVMULcs0NGf0")
+DRIVE_FOLDER_ID = os.environ.get("GOOGLE_DRIVE_FOLDER_ID", "126_rRUqz3xaxbLrlxMT6H31LL6pgWroS")
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
