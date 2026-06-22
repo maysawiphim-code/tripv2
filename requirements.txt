@@ -1,7 +1,8 @@
 streamlit
+pandas
 python-docx
 pillow
-pandas
 gspread
 google-auth
 google-api-python-client
+openpyxl
